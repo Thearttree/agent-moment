@@ -623,6 +623,8 @@ function readAsDataURL(file){
   });
 }
 
+let cachedId = null;
+
 function usableQuestions(){
   return STEPS
     .filter(s=> s.id)
@@ -642,7 +644,7 @@ async function buildPayload(){
   const name = (ans.q1 || "匿名").trim().slice(0, 20);
   return {
     schema: "agent-moment-interview/1",
-    id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)),
+    id: cachedId || (cachedId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2))),
     createdAt: new Date().toISOString(),
     name,
     answers: ans,
