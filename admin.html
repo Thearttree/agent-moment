@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>访谈回收台 · 创作者的 Agent 时刻</title>
+<style>
+  :root{
+    --cream:#FDFCE8;
+    --lime:#DCE890;
+    --lime-l:#EDF2C4;
+    --green:#8CB850;
+    --green-d:#6FA83C;
+    --mint:#7CC49C;
+    --teal:#00897A;
+    --ink:#0B3A42;
+    --ink-soft:#2C4A4F;
+    --body:#1A1A1A;
+    --muted:#7A7A72;
+    --line:#E6E6DF;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--white);color:var(--body);
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px 90px;}
+
+  /* 头部 */
+  header{padding:38px 0 0;}
+  .eyebrow{font-size:11px;letter-spacing:.2em;color:var(--teal);font-weight:600;}
+  h1{font-size:30px;line-height:1.35;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin-top:10px;}
+  .sub{font-size:13px;color:var(--muted);margin-top:8px;}
+
+  .stats{display:flex;gap:0;margin-top:26px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .stat{flex:1;padding:18px 22px;border-right:1px solid var(--line);}
+  .stat:last-child{border-right:0;}
+  .stat .v{font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2;}
+  .stat .k{font-size:11.5px;color:var(--muted);letter-spacing:.04em;margin-top:4px;}
+
+  .toolbar{display:flex;align-items:center;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .btn{
+    appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fff;
+    font-family:inherit;font-size:13px;font-weight:600;padding:11px 18px;border-radius:4px;cursor:pointer;transition:.18s;
+  }
+  .btn:hover{background:var(--teal);border-color:var(--teal);}
+  .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line);font-weight:500;}
+  .btn.ghost:hover{background:var(--cream);border-color:var(--mint);}
+  .btn.danger{background:#fff;color:#C24E42;border-color:#EBD5D1;font-weight:500;}
+  .btn.danger:hover{background:#FDF1EF;border-color:#C24E42;}
+  .search{
+    margin-left:auto;border:1px solid var(--line);border-radius:4px;padding:10px 14px;
+    font-family:inherit;font-size:13px;width:220px;color:var(--body);
+  }
+  .search:focus{outline:none;border-color:var(--mint);box-shadow:0 0 0 3px rgba(124,196,156,.14);}
+
+  /* 拖拽区 */
+  .drop{
+    margin-top:22px;border:1.5px dashed #CFD8C6;border-radius:8px;padding:36px 24px;
+    text-align:center;cursor:pointer;transition:.18s;background:#FCFEFB;
+  }
+  .drop:hover,.drop.hot{border-color:var(--green);background:#F7FBF2;}
+  .drop .ic{font-size:26px;color:var(--green);line-height:1;}
+  .drop .t1{font-size:15px;font-weight:600;color:var(--ink);margin-top:12px;}
+  .drop .t2{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.8;}
+
+  /* 表格 */
+  .table-wrap{margin-top:26px;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;font-weight:600;font-size:11px;letter-spacing:.08em;color:var(--muted);
+    background:var(--cream);padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  tbody td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:0;}
+  tbody tr{cursor:pointer;transition:background .15s;}
+  tbody tr:hover{background:#FBFDF7;}
+  .nm{font-weight:600;color:var(--ink);}
+  .nm .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:1px;}
+  .tag{
+    display:inline-block;font-size:11px;padding:2px 8px;border-radius:3px;margin:2px 4px 2px 0;
+    background:#F3F6E6;color:var(--green-d);white-space:nowrap;
+  }
+  .tag.audio{background:#EAF6F1;color:var(--teal);}
+  .muted{color:var(--muted);}
+  .mono{font-variant-numeric:tabular-nums;}
+
+  .empty{padding:56px 20px;text-align:center;color:var(--muted);font-size:13px;line-height:2;}
+
+  /* 详情 */
+  .overlay{
+    position:fixed;inset:0;background:rgba(11,58,66,.28);z-index:80;
+    opacity:0;pointer-events:none;transition:.25s;
+  }
+  .overlay.on{opacity:1;pointer-events:auto;}
+  .panel{
+    position:fixed;top:0;right:0;bottom:0;width:min(760px,100%);background:#fff;z-index:81;
+    transform:translateX(100%);transition:transform .34s cubic-bezier(.22,1,.36,1);
+    display:flex;flex-direction:column;box-shadow:-18px 0 48px rgba(11,58,66,.12);
+  }
+  .panel.on{transform:none;}
+  .panel .ph{
+    flex:none;padding:26px 32px 20px;border-bottom:1px solid var(--line);
+    display:flex;align-items:flex-start;gap:16px;
+  }
+  .panel .ph h2{font-size:23px;font-weight:700;color:var(--ink);letter-spacing:-.01em;}
+  .panel .ph .pm{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.8;}
+  .close{
+    margin-left:auto;flex:none;appearance:none;border:1px solid var(--line);background:#fff;
+    width:32px;height:32px;border-radius:50%;font-size:15px;color:var(--muted);cursor:pointer;line-height:1;
+  }
+  .close:hover{background:var(--cream);color:var(--ink);}
+  .panel .pb{flex:1;overflow-y:auto;padding:8px 32px 40px;}
+
+  .sec{margin-top:26px;}
+  .sec h3{
+    font-size:11px;letter-spacing:.16em;color:var(--green-d);font-weight:600;
+    padding-bottom:9px;border-bottom:1px solid var(--line);
+  }
+  .qa{padding:15px 0;border-bottom:1px solid #F2F2EC;}
+  .qa:last-child{border-bottom:0;}
+  .qa .q{font-size:13px;color:var(--muted);line-height:1.7;}
+  .qa .a{font-size:14.5px;color:var(--ink);margin-top:6px;line-height:1.85;white-space:pre-wrap;word-break:break-word;}
+  .qa .a.blank{color:#C4C4BB;font-style:normal;}
+
+  .medias{display:flex;flex-direction:column;gap:12px;margin-top:14px;}
+  .media{border:1px solid var(--line);border-radius:6px;padding:13px 15px;background:#FCFEFB;}
+  .media .mh{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft);margin-bottom:9px;}
+  .media .mh .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .media audio{width:100%;height:36px;}
+  .media img{max-width:100%;border-radius:4px;margin-top:6px;}
+  .media a.dl{font-size:12px;color:var(--teal);text-decoration:none;flex:none;}
+  .media a.dl:hover{text-decoration:underline;}
+
+  .toast{
+    position:fixed;left:50%;bottom:34px;transform:translate(-50%,14px);
+    background:var(--ink);color:#fff;font-size:13px;padding:11px 20px;border-radius:4px;
+    opacity:0;transition:.26s;pointer-events:none;z-index:120;max-width:86vw;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0);}
+
+  @media (max-width:760px){
+    .wrap{padding:0 16px 70px;}
+    h1{font-size:23px;}
+    .stats{flex-wrap:wrap;}
+    .stat{flex:1 1 50%;border-bottom:1px solid var(--line);}
+    .search{margin-left:0;width:100%;}
+    .table-wrap{overflow-x:auto;}
+    table{min-width:660px;}
+    .panel .ph,.panel .pb{padding-left:18px;padding-right:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">AGENT MOMENT · 访谈回收台</div>
+    <h1>创作者的 Agent 时刻</h1>
+    <div class="sub">把受访者发回来的表单文件拖进来，自动汇总成一份可读的分析表</div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="v" id="sCount">0</div><div class="k">已回收份数</div></div>
+    <div class="stat"><div class="v" id="sAudio">0</div><div class="k">带语音 / 附件的</div></div>
+    <div class="stat"><div class="v" id="sSaved">—</div><div class="k">平均节省时间</div></div>
+    <div class="stat"><div class="v" id="sLast">—</div><div class="k">最近一份</div></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn" id="pickBtn">导入表单文件</button>
+    <button class="btn ghost" id="csvBtn">导出 CSV</button>
+    <button class="btn danger" id="clearBtn">清空台账</button>
+    <input type="file" id="fileInput" accept=".json,application/json" multiple style="display:none">
+    <input class="search" id="search" type="text" placeholder="搜姓名 / 方向 / 关键词">
+  </div>
+
+  <div class="drop" id="drop">
+    <div class="ic">↓</div>
+    <div class="t1">把 访谈_xx_日期.json 拖到这里</div>
+    <div class="t2">可以一次拖多份；也可以点这里选择文件。数据只存在你这台电脑上，不会上传。</div>
+  </div>
+
+  <div class="table-wrap" id="tableWrap" style="display:none">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:110px">受访者</th>
+          <th style="width:170px">创作方向</th>
+          <th style="width:92px">实习</th>
+          <th style="width:120px">使用频率</th>
+          <th style="width:130px">耗时（手动→AI）</th>
+          <th style="width:100px">附件</th>
+          <th style="width:110px">收到时间</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="empty" id="empty" style="display:none">还没有收到文件</div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="panel" id="panel">
+  <div class="ph">
+    <div>
+      <h2 id="dName">—</h2>
+      <div class="pm" id="dMeta"></div>
+    </div>
+    <button class="close" id="closeBtn">✕</button>
+  </div>
+  <div class="pb" id="dBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   基础工具
+   ========================================================= */
+const $ = s=> document.querySelector(s);
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove("on"), 2400);
+}
+function fmtDate(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  if(isNaN(d)) return "—";
+  const p = n=> String(n).padStart(2,"0");
+  return p(d.getMonth()+1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+function fmtSize(n){
+  if(!n) return "0 KB";
+  return n > 1024*1024 ? (n/1024/1024).toFixed(1)+" MB" : Math.max(1, Math.round(n/1024))+" KB";
+}
+
+/* =========================================================
+   存储：IndexedDB，失败则退回内存
+   ========================================================= */
+const DB_NAME = "agent_moment_bridge";
+const STORE = "records";
+let memory = [];
+let db = null;
+let useMemory = false;
+
+function openDB(){
+  return new Promise((res)=>{
+    let done = false;
+    const fail = ()=>{ if(!done){ done = true; useMemory = true; res(null); } };
+    try{
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = e=>{
+        const d = e.target.result;
+        if(!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath:"id" });
+      };
+      req.onsuccess = e=>{ if(!done){ done = true; db = e.target.result; res(db); } };
+      req.onerror = fail;
+      req.onblocked = fail;
+      setTimeout(fail, 2500);
+    }catch(e){ fail(); }
+  });
+}
+function dbPut(rec){
+  if(useMemory || !db){ memory.push(rec); return Promise.resolve(); }
+  return new Promise((res, rej)=>{
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).put(rec);
+    tx.oncomplete = ()=> res();
+    tx.onerror = ()=> rej(tx.error);
+  });
+}
+function dbAll(){
+  if(useMemory || !db) return Promise.resolve(memory.slice());
+  return new Promise((res, rej)=>{
+    const tx = db.transaction(STORE, "readonly");
+    const rq = tx.objectStore(STORE).getAll();
+    rq.onsuccess = ()=> res(rq.result || []);
+    rq.onerror = ()=> rej(rq.error);
+  });
+}
+function dbClear(){
+  if(useMemory || !db){ memory = []; return Promise.resolve(); }
+  return new Promise((res)=>{
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).clear();
+    tx.oncomplete = ()=> res();
+  });
+}
+function dbDel(id){
+  if(useMemory || !db){ memory = memory.filter(r=> r.id !== id); return Promise.resolve(); }
+  return new Promise((res)=>{
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = ()=> res();
+  });
+}
+
+/* =========================================================
+   状态
+   ========================================================= */
+let records = [];
+let currentId = null;
+
+async function refresh(){
+  records = await dbAll();
+  records.sort((a,b)=> String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+  renderStats();
+  renderTable();
+}
+
+function renderStats(){
+  $("#sCount").textContent = records.length;
+  const withFiles = records.filter(r=> (r.attachments||[]).length).length;
+  $("#sAudio").textContent = withFiles;
+
+  const saves = [];
+  records.forEach(r=>{
+    const a = parseFloat((r.answers||{}).q9a), b = parseFloat((r.answers||{}).q9b);
+    if(!isNaN(a) && !isNaN(b) && a > 0){ saves.push((a-b)/a*100); }
+  });
+  $("#sSaved").textContent = saves.length ? Math.round(saves.reduce((x,y)=>x+y,0)/saves.length) + "%" : "—";
+  $("#sLast").textContent = records.length ? fmtDate(records[0].createdAt) : "—";
+}
+
+function match(r, kw){
+  if(!kw) return true;
+  const blob = JSON.stringify(r.answers || {}) + " " + (r.name||"");
+  return blob.toLowerCase().includes(kw.toLowerCase());
+}
+
+function renderTable(){
+  const kw = $("#search").value.trim();
+  const list = records.filter(r=> match(r, kw));
+  const wrap = $("#tableWrap"), empty = $("#empty");
+
+  if(!records.length){
+    wrap.style.display = "none";
+    empty.style.display = "block";
+    empty.textContent = "还没有收到文件 —— 把受访者发回来的 .json 拖到上面就行";
+    return;
+  }
+  wrap.style.display = "block";
+  empty.style.display = list.length ? "none" : "block";
+  if(!list.length){ empty.textContent = "没有匹配的记录"; }
+
+  const two = (r,k)=> (r.answers && r.answers[k]) ? r.answers[k] : "";
+
+  $("#tbody").innerHTML = list.map(r=>{
+    const a = r.answers || {};
+    const dir = Array.isArray(a.q2) ? a.q2.slice(0,2).map(x=>`<span class="tag">${esc(x)}</span>`).join("") : "—";
+    const t1 = a.q9a ? a.q9a + "′" : "—";
+    const t2 = a.q9b ? a.q9b + "′" : "—";
+    const files = (r.attachments||[]).length;
+    const hasAudio = (r.attachments||[]).some(f=> (f.type||"").startsWith("audio"));
+    return `<tr data-id="${esc(r.id)}">
+      <td><span class="nm"><span class="dot"></span>${esc(a.q1 || r.name || "匿名")}</span></td>
+      <td>${dir || "—"}</td>
+      <td class="muted">${esc(a.q3 || "—")}</td>
+      <td class="muted">${esc(a.q5 || "—")}</td>
+      <td class="mono">${t1} <span class="muted">→</span> ${t2}</td>
+      <td>${files ? `<span class="tag ${hasAudio?'audio':''}">${files} 个${hasAudio?' · 语音':''}</span>` : `<span class="muted">—</span>`}</td>
+      <td class="muted mono">${fmtDate(r.createdAt)}</td>
+    </tr>`;
+  }).join("");
+
+  $("#tbody").querySelectorAll("tr").forEach(tr=>{
+    tr.onclick = ()=> openDetail(tr.dataset.id);
+  });
+}
+
+/* =========================================================
+   详情
+   ========================================================= */
+const SECTIONS = [
+  {t:"A · 基本信息", ids:["q1","q2","q3","q4","q5"]},
+  {t:"B · 作品走查", ids:["q6","q7","q8","q9a","q9b","q10"]},
+  {t:"C · 时间去向", ids:["q11","q12","q13"]},
+  {t:"D · 能力变化", ids:["q14","q15"]},
+  {t:"E · 翻车与判断", ids:["q16","q17"]},
+  {t:"F · 授权与联系", ids:["q18","q19","q20","q21"]}
+];
+
+function labelMap(r){
+  const map = {};
+  (r.questions || []).forEach(q=>{
+    if(q.type === "pair" && q.fields){
+      q.fields.forEach(f=>{ map[f.k] = { q:q.q, label:f.label }; });
+    } else {
+      map[q.id] = { q:q.q, label:null };
+    }
+  });
+  if(!map.q9a) map.q9a = { q:"这一件，纯手动和用 AI 大概各要多久？", label:"纯手动（分钟）" };
+  if(!map.q9b) map.q9b = { q:"这一件，纯手动和用 AI 大概各要多久？", label:"用 AI 之后（分钟）" };
+  return map;
+}
+
+function answerText(v){
+  if(Array.isArray(v)) return v.length ? v.join(" · ") : "";
+  return v == null ? "" : String(v);
+}
+
+function openDetail(id){
+  const r = records.find(x=> x.id === id);
+  if(!r) return;
+  currentId = id;
+
+  const a = r.answers || {};
+  const map = labelMap(r);
+
+  $("#dName").textContent = a.q1 || r.name || "匿名";
+  const dirs = Array.isArray(a.q2) ? a.q2.join(" · ") : (a.q2 || "");
+  $("#dMeta").innerHTML = [
+    dirs,
+    a.q3 ? "实习 " + esc(a.q3) : "",
+    fmtDate(r.createdAt) + " 收到"
+  ].filter(Boolean).join(" &nbsp;/&nbsp; ");
+
+  let html = "";
+
+  if((r.attachments||[]).length){
+    html += `<div class="sec"><h3>语音与附件</h3><div class="medias">`;
+    r.attachments.forEach(f=>{
+      const isAudio = (f.type||"").startsWith("audio");
+      const isImg = (f.type||"").startsWith("image");
+      html += `<div class="media">
+        <div class="mh">
+          <span class="fn">${esc(f.name)}</span>
+          <span class="muted mono">${fmtSize(f.size)}</span>
+          <a class="dl" href="${f.data}" download="${esc(f.name)}">下载</a>
+        </div>
+        ${isAudio ? `<audio controls preload="metadata" src="${f.data}"></audio>` : ""}
+        ${isImg ? `<img src="${f.data}" alt="">` : ""}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  SECTIONS.forEach(sec=>{
+    const blocks = sec.ids
+      .map(id=>{
+        const meta = map[id] || { q:id, label:null };
+        let v = a[id];
+        if(id === "q9a" || id === "q9b"){
+          const full = meta.q + (meta.label ? "（" + meta.label + "）" : "");
+          return qa(full, v);
+        }
+        return qa(meta.q, v);
+      })
+      .filter(Boolean)
+      .join("");
+    if(blocks) html += `<div class="sec"><h3>${esc(sec.t)}</h3>${blocks}</div>`;
+  });
+
+  $("#dBody").innerHTML = html;
+  $("#dBody").scrollTop = 0;
+  $("#panel").classList.add("on");
+  $("#overlay").classList.add("on");
+}
+
+function qa(q, v){
+  const t = answerText(v);
+  if(!t) return "";
+  return `<div class="qa"><div class="q">${esc(q)}</div><div class="a">${esc(t)}</div></div>`;
+}
+
+function closeDetail(){
+  $("#panel").classList.remove("on");
+  $("#overlay").classList.remove("on");
+  currentId = null;
+}
+$("#closeBtn").onclick = closeDetail;
+$("#overlay").onclick = closeDetail;
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeDetail(); });
+
+/* =========================================================
+   导入
+   ========================================================= */
+async function importFiles(fileList){
+  const files = Array.from(fileList || []);
+  if(!files.length) return;
+
+  let ok = 0, bad = 0, dup = 0;
+  for(const f of files){
+    try{
+      const text = await f.text();
+      const obj = JSON.parse(text);
+      const rec = normalize(obj, f.name);
+      if(!rec){ bad++; continue; }
+      if(records.some(r=> r.id === rec.id)){ dup++; continue; }
+      await dbPut(rec);
+      ok++;
+    }catch(e){ bad++; }
+  }
+
+  await refresh();
+
+  const bits = [];
+  if(ok) bits.push("导入 " + ok + " 份");
+  if(dup) bits.push("重复跳过 " + dup);
+  if(bad) bits.push("无法识别 " + bad);
+  toast(bits.join("，") || "没有可导入的文件");
+}
+
+function normalize(obj, fileName){
+  if(!obj || typeof obj !== "object") return null;
+  const answers = obj.answers;
+  if(!answers || typeof answers !== "object") return null;
+
+  return {
+    id: obj.id || ("imp_" + Date.now() + "_" + Math.random().toString(16).slice(2)),
+    createdAt: obj.createdAt || new Date().toISOString(),
+    name: obj.name || answers.q1 || "匿名",
+    answers,
+    questions: Array.isArray(obj.questions) ? obj.questions : [],
+    attachments: Array.isArray(obj.attachments) ? obj.attachments : [],
+    meta: obj.meta || {},
+    sourceFile: fileName || ""
+  };
+}
+
+$("#pickBtn").onclick = ()=> $("#fileInput").click();
+$("#fileInput").onchange = e=>{
+  importFiles(e.target.files);
+  e.target.value = "";
+};
+$("#drop").onclick = ()=> $("#fileInput").click();
+
+["dragenter","dragover"].forEach(ev=>{
+  $("#drop").addEventListener(ev, e=>{ e.preventDefault(); $("#drop").classList.add("hot"); });
+});
+["dragleave","drop"].forEach(ev=>{
+  $("#drop").addEventListener(ev, e=>{ e.preventDefault(); $("#drop").classList.remove("hot"); });
+});
+$("#drop").addEventListener("drop", e=>{
+  if(e.dataTransfer && e.dataTransfer.files) importFiles(e.dataTransfer.files);
+});
+window.addEventListener("dragover", e=> e.preventDefault());
+window.addEventListener("drop", e=>{
+  e.preventDefault();
+  if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+    importFiles(e.dataTransfer.files);
+  }
+});
+
+/* =========================================================
+   导出 / 清空
+   ========================================================= */
+$("#csvBtn").onclick = ()=>{
+  if(!records.length){ toast("还没有数据"); return; }
+  const heads = ["姓名","创作方向","实习","AI工具","使用频率","作品","AI参与的环节","返工环节","纯手动分钟","用AI分钟","是否告知","省下的时间用于","产出要求变化","更值钱的能力","没那么重要的能力","翻车经历","停用AI假设","授权方式","引流账号","联系方式","补充","附件数","收到时间"];
+  const keys = ["q1","q2","q3","q4","q5","q6","q7","q8","q9a","q9b","q10","q11","q12","q14","q15","q16","q17","q18","q19","q20","q21"];
+
+  const rows = records.map(r=>{
+    const a = r.answers || {};
+    const vals = keys.map(k=>{
+      const v = a[k];
+      return Array.isArray(v) ? v.join(" / ") : (v == null ? "" : String(v));
+    });
+    vals.push((r.attachments||[]).length);
+    vals.push(fmtDate(r.createdAt));
+    return vals;
+  });
+
+  const csv = [heads, ...rows]
+    .map(line=> line.map(c=> '"' + String(c).replace(/"/g,'""') + '"').join(","))
+    .join("\r\n");
+
+  const blob = new Blob(["\ufeff" + csv], { type:"text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "访谈汇总_" + new Date().toISOString().slice(0,10) + ".csv";
+  a.click();
+  setTimeout(()=> URL.revokeObjectURL(url), 1500);
+  toast("CSV 已导出");
+};
+
+$("#clearBtn").onclick = async ()=>{
+  if(!records.length){ toast("本来就是空的"); return; }
+  if(!confirm("确定清空回收台里的 " + records.length + " 份记录吗？原始 .json 文件不会被删除。")) return;
+  await dbClear();
+  await refresh();
+  toast("已清空");
+};
+
+$("#search").addEventListener("input", renderTable);
+
+/* =========================================================
+   启动
+   ========================================================= */
+(async function init(){
+  await openDB();
+  await refresh();
+  if(useMemory){
+    toast("浏览器不允许本地存储，本次数据只在当前页面有效");
+  }
+})();
+</script>
+</body>
+</html>
