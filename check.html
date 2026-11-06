@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>打开检测</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;padding:22px 18px 60px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+       background:#FDFCE8;color:#0B3A42;font-size:15px;line-height:1.7;}
+  h1{font-size:20px;margin:0 0 6px;}
+  .ok{display:inline-block;margin:14px 0 18px;padding:12px 16px;border-radius:14px;background:#DCE890;font-weight:700;font-size:16px;}
+  .box{background:#fff;border:1px solid #E6E6D8;border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+  .k{color:#00897A;font-size:12px;letter-spacing:.06em;margin-bottom:4px;}
+  .v{word-break:break-all;font-size:14px;}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed #EDEDE0;}
+  .row:last-child{border-bottom:0;}
+  .yes{color:#2E7D32;font-weight:700;}
+  .no{color:#C62828;font-weight:700;}
+  .tip{font-size:13px;color:#5C6B6E;margin-top:18px;}
+</style>
+</head>
+<body>
+  <h1>打开检测</h1>
+  <div class="ok">这一页能正常显示，说明网络是通的</div>
+
+  <div class="box">
+    <div class="k">设备 / 系统</div>
+    <div class="v" id="ua">—</div>
+  </div>
+
+  <div class="box">
+    <div class="k">iOS 版本</div>
+    <div class="v" id="ios">—</div>
+  </div>
+
+  <div class="box">
+    <div class="k">屏幕</div>
+    <div class="v" id="screen">—</div>
+  </div>
+
+  <div class="box">
+    <div class="k">能力检测</div>
+    <div id="caps"></div>
+  </div>
+
+  <div class="tip">把这一页截个图发回给我就行（不需要填任何信息）。</div>
+
+<script>
+(function(){
+  var ua = navigator.userAgent || "";
+  document.getElementById("ua").textContent = ua || "空";
+
+  var m = ua.match(/OS (\d+)[._](\d+)/);
+  var ios = m ? ("iOS " + m[1] + "." + m[2]) : "不是 iOS 或无法识别";
+  if (m) {
+    var v = parseInt(m[1],10), v2 = parseInt(m[2],10);
+    if (v < 15 || (v === 15 && v2 < 4)) ios += "　（版本偏老，可能出现白屏）";
+  }
+  document.getElementById("ios").textContent = ios;
+
+  document.getElementById("screen").textContent =
+    "可视区域 " + window.innerWidth + " × " + window.innerHeight + "　像素比 " + (window.devicePixelRatio || 1);
+
+  var tests = [
+    ["fetch（网络请求）", typeof fetch === "function"],
+    ["录音 MediaRecorder", !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia)],
+    ["crypto.randomUUID", !!(window.crypto && window.crypto.randomUUID)],
+    ["可选链 ?.", (function(){ try { eval("({a:{b:1}}).a?.b"); return true; } catch(e){ return false; } })()],
+    ["空值合并 ??", (function(){ try { eval("null ?? 1"); return true; } catch(e){ return false; } })()],
+    ["CSS dvh 单位", (function(){ try { return CSS.supports("height","100dvh"); } catch(e){ return false; } })()],
+    ["Blob 下载", (function(){ try { return !!new Blob(["a"]); } catch(e){ return false; } })()]
+  ];
+  var box = document.getElementById("caps");
+  for (var i = 0; i < tests.length; i++) {
+    var d = document.createElement("div");
+    d.className = "row";
+    var l = document.createElement("span"); l.textContent = tests[i][0];
+    var r = document.createElement("span");
+    r.className = tests[i][1] ? "yes" : "no";
+    r.textContent = tests[i][1] ? "支持" : "不支持";
+    d.appendChild(l); d.appendChild(r); box.appendChild(d);
+  }
+})();
+</script>
+</body>
+</html>
