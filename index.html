@@ -37,8 +37,8 @@
   .track{height:3px;background:#EFEFE7;border-radius:99px;overflow:hidden;}
   .track i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--lime),var(--green));transition:width .45s cubic-bezier(.4,0,.2,1);}
 
-  .stage{flex:1;display:flex;align-items:center;justify-content:center;padding:22px;overflow-y:auto;}
-  .card{width:100%;max-width:560px;animation:in .42s cubic-bezier(.22,1,.36,1) both;}
+  .stage{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:22px;overflow-y:auto;}
+  .card{width:100%;max-width:560px;margin:auto;animation:in .42s cubic-bezier(.22,1,.36,1) both;}
   @keyframes in{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
   .card.back{animation:backIn .42s cubic-bezier(.22,1,.36,1) both;}
   @keyframes backIn{from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:none;}}
@@ -47,6 +47,12 @@
   h1{font-size:clamp(26px,7vw,36px);line-height:1.32;font-weight:700;letter-spacing:-.02em;color:var(--ink);}
   h2{font-size:clamp(20px,5.4vw,25px);line-height:1.45;font-weight:700;color:var(--ink);letter-spacing:-.01em;}
   .hint{font-size:13px;color:var(--muted);margin-top:9px;line-height:1.7;}
+  .vtip{
+    display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding:11px 14px;
+    background:#F5FAF1;border:1px solid #E3EFD6;border-radius:4px;
+    font-size:12.5px;color:#4C6B3D;line-height:1.8;
+  }
+  .vtip .i{flex:none;font-size:11px;background:#fff;border:1px solid #D9E8C8;border-radius:3px;padding:1px 7px;color:#5E8244;line-height:1.9;}
 
   .lead{margin-top:18px;font-size:14.5px;color:var(--ink-soft);line-height:1.9;}
   .meta{
@@ -216,7 +222,7 @@ const STEPS = [
   {
     type:"cover",
     title:"聊聊你最近<br>用 AI 做的一个作品",
-    lead:"我在做一个记录校园创作者怎么用 AI 做作品的专栏。这份访谈一共十几页，一页一题，大约 8 分钟。没有标准答案，写口语、写短句都行 —— 翻车的故事比成功案例更有意思。",
+    lead:"我在做一个记录校园创作者怎么用 AI 做作品的专栏。这份访谈一共十几页，一页一题，大约 8 分钟。没有标准答案，写口语、写短句都行 —— 翻车的故事比成功案例更有意思。<br><br>要写字的地方，不想打字就点输入法上的<b>麦克风</b>直接说，转成文字就行。",
     meta:"<b>关于隐私：</b>内容只用于课程研究与专栏写作，不做商业用途。<br><b>关于署名：</b>最后一页你可以选实名、匿名，或先看稿子。<br><b>可以退出：</b>中途关掉不要紧，重新打开会自动接着填。",
     warn:"<b>如果你在微信里打开：</b>请先点右上角「···」→「在浏览器打开」。否则最后一步保存文件会失败。"
   },
@@ -318,6 +324,9 @@ function toast(msg){
   t.textContent = msg; t.classList.add("on");
   clearTimeout(t._t);
   t._t = setTimeout(()=>t.classList.remove("on"), 2400);
+}
+function voiceTip(extra){
+  return `<div class="vtip"><span class="i">语音输入</span><span>不想打字就点输入法上的麦克风，直接说，自动转成文字。${extra}</span></div>`;
 }
 function mb(n){ return (n/1024/1024).toFixed(1) + " MB"; }
 
@@ -422,15 +431,18 @@ function render(dir){
 
 function bodyFor(s){
   if(s.type === "text"){
-    return `<input type="text" id="f_${s.id}" value="${esc(ans[s.id]||"")}" placeholder="${s.ph||""}">`;
+    return `<input type="text" id="f_${s.id}" value="${esc(ans[s.id]||"")}" placeholder="${s.ph||""}">
+      ${voiceTip("短就行，一个词也可以。")}`;
   }
   if(s.type === "textarea"){
-    return `<textarea id="f_${s.id}" placeholder="${s.ph||""}">${esc(ans[s.id]||"")}</textarea>`;
+    return `<textarea id="f_${s.id}" placeholder="${s.ph||""}">${esc(ans[s.id]||"")}</textarea>
+      ${voiceTip("想到什么说什么，不用组织语言，说到一半、写错别字都没关系。")}`;
   }
   if(s.type === "pair"){
     return `<div class="pair">${s.fields.map(f=>`
       <div><label>${f.label}</label>
-      <input type="number" inputmode="numeric" id="f_${f.k}" value="${esc(ans[f.k]||"")}" placeholder="${f.ph}"></div>`).join("")}</div>`;
+      <input type="number" inputmode="numeric" id="f_${f.k}" value="${esc(ans[f.k]||"")}" placeholder="${f.ph}"></div>`).join("")}</div>
+      ${voiceTip("估个大概就行，不用精确。")}`;
   }
   if(s.type === "multi" || s.type === "single"){
     const cur = s.type === "multi" ? (ans[s.id] || []) : (ans[s.id] || "");
