@@ -215,6 +215,32 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ---------- 诊断模式：在链接后加 ?diag=1 ---------- */
+if(location.search.indexOf("diag")>-1){
+  (function(){
+    var ua=navigator.userAgent||"", m=ua.match(/OS (\d+)[._](\d+)/), ios="非 iOS 或无法识别";
+    if(m){ ios="iOS "+m[1]+"."+m[2]; if(parseInt(m[1],10)<15||(m[1]==="15"&&parseInt(m[2],10)<4)) ios+="（版本偏老）"; }
+    function t(name,fn){ var ok=false; try{ ok=!!fn(); }catch(e){ ok=false; }
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #EDEDE0"><span>'+name+'</span><b style="color:'+(ok?"#2E7D32":"#C62828")+'">'+(ok?"支持":"不支持")+'</b></div>'; }
+    var html='<div style="padding:22px 18px 60px;font-family:-apple-system,\'PingFang SC\',sans-serif;background:#FDFCE8;color:#0B3A42;font-size:15px;line-height:1.7">'
+      +'<h1 style="font-size:20px;margin:0 0 6px">打开检测</h1>'
+      +'<div style="padding:12px 16px;border-radius:14px;background:#DCE890;font-weight:700;margin:14px 0 18px">这一页能正常显示，说明网络是通的</div>'
+      +'<div style="background:#fff;border:1px solid #E6E6D8;border-radius:14px;padding:14px 16px;margin-bottom:14px;word-break:break-all"><div style="color:#00897A;font-size:12px;margin-bottom:4px">系统</div>'+ios+'</div>'
+      +'<div style="background:#fff;border:1px solid #E6E6D8;border-radius:14px;padding:14px 16px;margin-bottom:14px;word-break:break-all"><div style="color:#00897A;font-size:12px;margin-bottom:4px">设备信息</div>'+ua+'</div>'
+      +'<div style="background:#fff;border:1px solid #E6E6D8;border-radius:14px;padding:14px 16px;margin-bottom:14px"><div style="color:#00897A;font-size:12px;margin-bottom:4px">屏幕</div>'+window.innerWidth+" × "+window.innerHeight+' / 像素比 '+(window.devicePixelRatio||1)+'</div>'
+      +'<div style="background:#fff;border:1px solid #E6E6D8;border-radius:14px;padding:14px 16px">'
+        +'<div style="color:#00897A;font-size:12px;margin-bottom:4px">能力检测</div>'
+        +t("网络请求 fetch",function(){return typeof fetch==="function";})
+        +t("录音 MediaRecorder",function(){return !!(window.MediaRecorder&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);})
+        +t("crypto.randomUUID",function(){return !!window.crypto.randomUUID;})
+        +t("CSS dvh 单位",function(){return CSS.supports("height","100dvh");})
+        +t("Blob 下载",function(){return !!new Blob(["a"]);})
+      +'</div>'
+      +'<div style="font-size:13px;color:#5C6B6E;margin-top:18px">把这一页截图发回给我就行，不用填任何信息。</div></div>';
+    document.documentElement.innerHTML='<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>打开检测</title></head><body style="margin:0">'+html+'</body>';
+  })();
+  throw new Error("__diag__");
+}
 /* =========================================================
    问卷结构
    ========================================================= */
